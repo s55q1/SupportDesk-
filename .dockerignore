@@ -1,0 +1,4 @@
+.git
+.claude
+*.zip
+database/helpdesk.sqlite

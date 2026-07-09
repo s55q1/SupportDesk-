@@ -1,0 +1,6 @@
+database/helpdesk.sqlite
+uploads/*
+!uploads/.gitkeep
+*.zip
+.claude/
+node_modules/

@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: supportdesk
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /pages/login.php

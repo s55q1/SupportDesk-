@@ -77,6 +77,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','started','completed','confirmed')),
     created_by INTEGER NOT NULL,
     assigned_to INTEGER NOT NULL,
+    attachment TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     started_at TEXT,
     completed_at TEXT,

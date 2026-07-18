@@ -25,8 +25,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($assignedTo === (int)$current['id']) {
             $errorMessage = 'لا يمكن إرسال مهمة لنفسك.';
         } else {
-            createTask($pdo, $title, $description, $priority, (int)$current['id'], $assignedTo);
-            $successMessage = 'تم إرسال المهمة بنجاح.';
+            $attachmentPath = null;
+            if (!empty($_FILES['attachment']['name']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
+                $ext = strtolower(pathinfo($_FILES['attachment']['name'], PATHINFO_EXTENSION));
+                $allowedExt = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip'];
+                if (in_array($ext, $allowedExt, true) && $_FILES['attachment']['size'] < 8 * 1024 * 1024) {
+                    $dir = __DIR__ . '/../uploads';
+                    $fname = 'task_' . uniqid() . '.' . $ext;
+                    if (move_uploaded_file($_FILES['attachment']['tmp_name'], $dir . '/' . $fname)) {
+                        $attachmentPath = 'uploads/' . $fname;
+                    }
+                } else {
+                    $errorMessage = 'صيغة الملف غير مدعومة أو الحجم يتجاوز 8 ميجابايت.';
+                }
+            }
+            if ($errorMessage === '') {
+                createTask($pdo, $title, $description, $priority, (int)$current['id'], $assignedTo, $attachmentPath);
+                $successMessage = 'تم إرسال المهمة بنجاح.';
+            }
         }
     } elseif (isset($_POST['start_task'])) {
         startTask($pdo, (int)$_POST['task_id'], (int)$current['id']);
@@ -76,6 +92,7 @@ require __DIR__ . '/../includes/layout_top.php';
                 </div>
                 <div class="ticket-meta">من: <?= htmlspecialchars($task['created_by_name']) ?> · أولوية: <?= $priorityLabels[$task['priority']] ?></div>
                 <?php if ($task['description']): ?><div class="ticket-meta" style="margin-top:4px"><?= nl2br(htmlspecialchars($task['description'])) ?></div><?php endif; ?>
+                <?= renderTaskAttachment($task['attachment']) ?>
                 <div style="margin-top:14px;overflow-x:auto"><?= renderTaskStepper($task['status']) ?></div>
                 <div class="ticket-actions">
                     <?php if ($task['status'] === 'pending'): ?>
@@ -95,7 +112,7 @@ require __DIR__ . '/../includes/layout_top.php';
     <div class="card">
         <h2>إرسال مهمة جديدة</h2>
         <p class="sub">اختر المستلم وحدد تفاصيل المهمة.</p>
-        <form method="post">
+        <form method="post" enctype="multipart/form-data">
             <?= csrfField() ?>
             <div class="field">
                 <label>المستلم</label>
@@ -116,6 +133,11 @@ require __DIR__ . '/../includes/layout_top.php';
                     <option value="high">عاجلة</option>
                 </select>
             </div>
+            <div class="field">
+                <label>إرفاق صورة أو ملف (اختياري)</label>
+                <input type="file" name="attachment" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.zip" />
+                <div class="hint">الصيغ المدعومة: صور، PDF، Word، Excel، ZIP — بحد أقصى 8 ميجابايت</div>
+            </div>
             <button type="submit" name="create_task" class="btn btn-primary btn-block">إرسال المهمة</button>
         </form>
     </div>
@@ -135,7 +157,7 @@ require __DIR__ . '/../includes/layout_top.php';
                         <td class="num">#<?= (int)$task['id'] ?></td>
                         <td><?= htmlspecialchars($task['title']) ?></td>
                         <td><?= htmlspecialchars($task['assigned_to_name']) ?></td>
-                        <td><span class="badge badge-<?= $task['status'] ?>"><?= $statusLabels[$task['status']] ?></span></td>
+                        <td><span class="badge badge-<?= $task['status'] ?>"><?= $statusLabels[$task['status']] ?></span><?= renderTaskAttachment($task['attachment']) ?></td>
                         <td style="min-width:280px"><?= renderTaskStepper($task['status']) ?></td>
                         <td>
                             <?php if ($task['status'] === 'completed'): ?>

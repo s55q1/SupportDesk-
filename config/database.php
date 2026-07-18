@@ -41,6 +41,10 @@ function getDatabaseConnection(): PDO
             FOREIGN KEY (created_by) REFERENCES users(id),
             FOREIGN KEY (assigned_to) REFERENCES users(id)
         )");
+        $hasAttachment = $pdo->query("PRAGMA table_info(tasks)")->fetchAll(PDO::FETCH_COLUMN, 1);
+        if (!in_array('attachment', $hasAttachment, true)) {
+            $pdo->exec('ALTER TABLE tasks ADD COLUMN attachment TEXT');
+        }
     }
 
     return $pdo;

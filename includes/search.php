@@ -306,10 +306,10 @@ function getOtherUsers(PDO $pdo, int $selfId): array
     return $stmt->fetchAll();
 }
 
-function createTask(PDO $pdo, string $title, string $description, string $priority, int $createdBy, int $assignedTo): bool
+function createTask(PDO $pdo, string $title, string $description, string $priority, int $createdBy, int $assignedTo, ?string $attachment = null): bool
 {
-    $stmt = $pdo->prepare('INSERT INTO tasks (title, description, priority, created_by, assigned_to) VALUES (:t, :d, :p, :cb, :at)');
-    return $stmt->execute(['t' => $title, 'd' => $description, 'p' => $priority, 'cb' => $createdBy, 'at' => $assignedTo]);
+    $stmt = $pdo->prepare('INSERT INTO tasks (title, description, priority, created_by, assigned_to, attachment) VALUES (:t, :d, :p, :cb, :at, :a)');
+    return $stmt->execute(['t' => $title, 'd' => $description, 'p' => $priority, 'cb' => $createdBy, 'at' => $assignedTo, 'a' => $attachment]);
 }
 
 function getSentTasks(PDO $pdo, int $userId): array
@@ -353,6 +353,20 @@ function confirmTask(PDO $pdo, int $taskId, int $userId): bool
     $stmt = $pdo->prepare("UPDATE tasks SET status = 'confirmed', confirmed_at = datetime('now') WHERE id = :id AND created_by = :uid AND status = 'completed'");
     $stmt->execute(['id' => $taskId, 'uid' => $userId]);
     return $stmt->rowCount() > 0;
+}
+
+function renderTaskAttachment(?string $path): string
+{
+    if (!$path) {
+        return '';
+    }
+    $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+    $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true);
+    $url = '../' . htmlspecialchars($path);
+    if ($isImage) {
+        return '<div style="margin-top:10px"><img src="' . $url . '" style="max-width:220px;border-radius:8px;border:1px solid var(--line)" /></div>';
+    }
+    return '<div style="margin-top:8px"><a class="btn btn-ghost btn-sm" href="' . $url . '" target="_blank" rel="noopener">تحميل المرفق (' . htmlspecialchars($ext) . ')</a></div>';
 }
 
 function taskStageIndex(string $status): int

@@ -69,6 +69,7 @@ require __DIR__ . '/../includes/layout_top.php';
 ?>
 <div class="page-head">
     <div><h1>المهام بين المستخدمين</h1><p>إرسال مهمة إلى أي مستخدم بالنظام ومتابعة مراحل تنفيذها لحظياً.</p></div>
+    <a class="btn btn-primary" href="task_new.php">+ إرسال مهمة</a>
 </div>
 
 <?php if ($successMessage): ?><div class="alert alert-success"><?= htmlspecialchars($successMessage) ?></div><?php endif; ?>
@@ -79,68 +80,33 @@ require __DIR__ . '/../includes/layout_top.php';
     <div class="stat-tile tone-warning"><div class="l">مهام أرسلتها</div><div class="n"><?= count($sentTasks) ?></div></div>
 </div>
 
-<div class="grid-weighted">
-    <div class="card">
-        <div class="card-head"><div><h2>المهام الواردة إليك</h2><p class="sub" style="margin:0">مهام أوكلها لك مستخدمون آخرون</p></div></div>
-        <?php if (empty($receivedTasks)): ?>
-            <div class="alert alert-info" style="margin:0">لا توجد مهام واردة إليك حالياً.</div>
-        <?php else: foreach ($receivedTasks as $task): ?>
-            <div class="ticket-card st-<?= $task['status'] === 'confirmed' ? 'closed' : ($task['status'] === 'pending' ? 'open' : 'assigned') ?>">
-                <div class="ticket-top">
-                    <span class="ticket-title">#<?= (int)$task['id'] ?> — <?= htmlspecialchars($task['title']) ?></span>
-                    <span class="badge badge-<?= $task['status'] ?>"><?= $statusLabels[$task['status']] ?></span>
-                </div>
-                <div class="ticket-meta">من: <?= htmlspecialchars($task['created_by_name']) ?> · أولوية: <?= $priorityLabels[$task['priority']] ?></div>
-                <?php if ($task['description']): ?><div class="ticket-meta" style="margin-top:4px"><?= nl2br(htmlspecialchars($task['description'])) ?></div><?php endif; ?>
-                <?= renderTaskAttachment($task['attachment']) ?>
-                <div style="margin-top:14px;overflow-x:auto"><?= renderTaskStepper($task['status']) ?></div>
-                <div class="ticket-actions">
-                    <?php if ($task['status'] === 'pending'): ?>
-                        <form method="post"><?= csrfField() ?><input type="hidden" name="task_id" value="<?= (int)$task['id'] ?>" />
-                            <button class="btn btn-primary btn-sm" type="submit" name="start_task">بدء العمل</button>
-                        </form>
-                    <?php elseif ($task['status'] === 'started'): ?>
-                        <form method="post"><?= csrfField() ?><input type="hidden" name="task_id" value="<?= (int)$task['id'] ?>" />
-                            <button class="btn btn-success btn-sm" type="submit" name="complete_task">إنهاء المهمة</button>
-                        </form>
-                    <?php endif; ?>
-                </div>
+<div class="card">
+    <div class="card-head"><div><h2>المهام الواردة إليك</h2><p class="sub" style="margin:0">مهام أوكلها لك مستخدمون آخرون</p></div></div>
+    <?php if (empty($receivedTasks)): ?>
+        <div class="alert alert-info" style="margin:0">لا توجد مهام واردة إليك حالياً.</div>
+    <?php else: foreach ($receivedTasks as $task): ?>
+        <div class="ticket-card st-<?= $task['status'] === 'confirmed' ? 'closed' : ($task['status'] === 'pending' ? 'open' : 'assigned') ?>">
+            <div class="ticket-top">
+                <span class="ticket-title">#<?= (int)$task['id'] ?> — <?= htmlspecialchars($task['title']) ?></span>
+                <span class="badge badge-<?= $task['status'] ?>"><?= $statusLabels[$task['status']] ?></span>
             </div>
-        <?php endforeach; endif; ?>
-    </div>
-
-    <div class="card">
-        <h2>إرسال مهمة جديدة</h2>
-        <p class="sub">اختر المستلم وحدد تفاصيل المهمة.</p>
-        <form method="post" enctype="multipart/form-data">
-            <?= csrfField() ?>
-            <div class="field">
-                <label>المستلم</label>
-                <select name="assigned_to" required>
-                    <option value="">— اختر مستخدماً —</option>
-                    <?php foreach ($otherUsers as $u): ?>
-                        <option value="<?= (int)$u['id'] ?>"><?= htmlspecialchars($u['full_name']) ?></option>
-                    <?php endforeach; ?>
-                </select>
+            <div class="ticket-meta">من: <?= htmlspecialchars($task['created_by_name']) ?> · أولوية: <?= $priorityLabels[$task['priority']] ?></div>
+            <?php if ($task['description']): ?><div class="ticket-meta" style="margin-top:4px"><?= nl2br(htmlspecialchars($task['description'])) ?></div><?php endif; ?>
+            <?= renderTaskAttachment($task['attachment']) ?>
+            <div style="margin-top:14px;overflow-x:auto"><?= renderTaskStepper($task['status']) ?></div>
+            <div class="ticket-actions">
+                <?php if ($task['status'] === 'pending'): ?>
+                    <form method="post"><?= csrfField() ?><input type="hidden" name="task_id" value="<?= (int)$task['id'] ?>" />
+                        <button class="btn btn-primary btn-sm" type="submit" name="start_task">بدء العمل</button>
+                    </form>
+                <?php elseif ($task['status'] === 'started'): ?>
+                    <form method="post"><?= csrfField() ?><input type="hidden" name="task_id" value="<?= (int)$task['id'] ?>" />
+                        <button class="btn btn-success btn-sm" type="submit" name="complete_task">إنهاء المهمة</button>
+                    </form>
+                <?php endif; ?>
             </div>
-            <div class="field"><label>عنوان المهمة</label><input name="title" required /></div>
-            <div class="field"><label>تفاصيل المهمة</label><textarea name="description" rows="3"></textarea></div>
-            <div class="field">
-                <label>الأولوية</label>
-                <select name="priority">
-                    <option value="low">منخفضة</option>
-                    <option value="medium" selected>متوسطة</option>
-                    <option value="high">عاجلة</option>
-                </select>
-            </div>
-            <div class="field">
-                <label>إرفاق صورة أو ملف (اختياري)</label>
-                <input type="file" name="attachment" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.zip" />
-                <div class="hint">الصيغ المدعومة: صور، PDF، Word، Excel، ZIP — بحد أقصى 8 ميجابايت</div>
-            </div>
-            <button type="submit" name="create_task" class="btn btn-primary btn-block">إرسال المهمة</button>
-        </form>
-    </div>
+        </div>
+    <?php endforeach; endif; ?>
 </div>
 
 <div class="card">

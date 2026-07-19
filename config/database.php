@@ -45,6 +45,15 @@ function getDatabaseConnection(): PDO
         if (!in_array('attachment', $hasAttachment, true)) {
             $pdo->exec('ALTER TABLE tasks ADD COLUMN attachment TEXT');
         }
+        $pdo->exec("CREATE TABLE IF NOT EXISTS task_comments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            task_id INTEGER NOT NULL,
+            by_name TEXT NOT NULL,
+            text TEXT NOT NULL DEFAULT '',
+            attachment TEXT,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
+        )");
     }
 
     return $pdo;

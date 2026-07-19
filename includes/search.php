@@ -373,6 +373,33 @@ function renderTaskAttachment(?string $path): string
     return '<div style="margin-top:8px"><a class="btn btn-ghost btn-sm" href="' . $url . '" target="_blank" rel="noopener">تحميل المرفق (' . htmlspecialchars($ext) . ')</a></div>';
 }
 
+function deleteTask(PDO $pdo, int $taskId, int $userId): bool
+{
+    $stmt = $pdo->prepare('DELETE FROM tasks WHERE id = :id AND created_by = :uid');
+    $stmt->execute(['id' => $taskId, 'uid' => $userId]);
+    return $stmt->rowCount() > 0;
+}
+
+function editTaskDetails(PDO $pdo, int $taskId, int $userId, string $title, string $description, string $priority): bool
+{
+    $stmt = $pdo->prepare("UPDATE tasks SET title = :t, description = :d, priority = :p WHERE id = :id AND created_by = :uid AND status = 'pending'");
+    $stmt->execute(['t' => $title, 'd' => $description, 'p' => $priority, 'id' => $taskId, 'uid' => $userId]);
+    return $stmt->rowCount() > 0;
+}
+
+function addTaskComment(PDO $pdo, int $taskId, string $byName, string $text, ?string $attachment = null): void
+{
+    $stmt = $pdo->prepare('INSERT INTO task_comments (task_id, by_name, text, attachment) VALUES (:t, :n, :x, :a)');
+    $stmt->execute(['t' => $taskId, 'n' => $byName, 'x' => $text, 'a' => $attachment]);
+}
+
+function getTaskComments(PDO $pdo, int $taskId): array
+{
+    $stmt = $pdo->prepare('SELECT * FROM task_comments WHERE task_id = :id ORDER BY id ASC');
+    $stmt->execute(['id' => $taskId]);
+    return $stmt->fetchAll();
+}
+
 function taskStageIndex(string $status): int
 {
     return ['pending' => 0, 'started' => 1, 'completed' => 2, 'confirmed' => 3][$status] ?? 0;

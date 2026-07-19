@@ -257,13 +257,17 @@ function createUserAccount(PDO $pdo, string $username, string $password, string 
     ]);
 }
 
-function updateUserAccount(PDO $pdo, int $userId, string $role, ?string $newPassword): void
+function updateUserAccount(PDO $pdo, int $userId, string $role, ?string $newPassword, ?string $fullName = null): void
 {
     $stmt = $pdo->prepare('UPDATE users SET role_id = :r WHERE id = :id');
     $stmt->execute(['r' => roleId($pdo, $role), 'id' => $userId]);
     if ($newPassword) {
         $stmt2 = $pdo->prepare('UPDATE users SET password = :p WHERE id = :id');
         $stmt2->execute(['p' => password_hash($newPassword, PASSWORD_DEFAULT), 'id' => $userId]);
+    }
+    if ($fullName !== null && trim($fullName) !== '') {
+        $stmt3 = $pdo->prepare('UPDATE users SET full_name = :f WHERE id = :id');
+        $stmt3->execute(['f' => trim($fullName), 'id' => $userId]);
     }
 }
 

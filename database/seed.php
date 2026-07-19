@@ -13,7 +13,7 @@ function seedDatabase(PDO $pdo): void
     }
 
     $users = [
-        ['nasser.admin', 'admin', 'ناصر القحطاني'],
+        ['nasser.admin', 'admin', 'سعود الشمري'],
         ['talal.eng',    'engineer', 'طلال الحربي'],
         ['khaled.tech',  'technician', 'خالد الزهراني'],
         ['fahad.tech',   'technician', 'فهد العتيبي'],

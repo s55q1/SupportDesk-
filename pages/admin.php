@@ -37,6 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $uid = (int)($_POST['user_id'] ?? 0);
         $role = trim($_POST['role'] ?? '');
         $newPass = trim($_POST['new_password'] ?? '');
+        $newFullName = trim($_POST['full_name'] ?? '');
         $stmtCurRole = $pdo->prepare('SELECT r.name FROM users u JOIN roles r ON u.role_id = r.id WHERE u.id = :id');
         $stmtCurRole->execute(['id' => $uid]);
         $currentRole = $stmtCurRole->fetchColumn();
@@ -48,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($currentRole === 'admin' && $role !== 'admin' && countAdmins($pdo) <= 1) {
             $errorMessage = 'لا يمكن تغيير دور آخر حساب مدير بالنظام.';
         } else {
-            updateUserAccount($pdo, $uid, $role, $newPass ?: null);
+            updateUserAccount($pdo, $uid, $role, $newPass ?: null, $newFullName ?: null);
             logAudit($pdo, 'user_updated', (int)$userSession['id'], null, 'user_id:' . $uid);
             $successMessage = 'تم حفظ التعديلات.';
         }
@@ -168,6 +169,10 @@ require __DIR__ . '/../includes/layout_top.php';
                             <form method="post" class="body" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
                                 <?= csrfField() ?>
                                 <input type="hidden" name="user_id" value="<?= (int)$u['id'] ?>" />
+                                <div class="field" style="margin-bottom:0">
+                                    <label>الاسم الكامل</label>
+                                    <input name="full_name" value="<?= htmlspecialchars($u['full_name']) ?>" />
+                                </div>
                                 <div class="field" style="margin-bottom:0">
                                     <label>الدور</label>
                                     <select name="role" <?= $isLastAdmin ? 'disabled' : '' ?>>
